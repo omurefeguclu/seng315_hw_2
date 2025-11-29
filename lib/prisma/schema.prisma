@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client"
+  output = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model UserScore {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  score     Int
+  updatedAt DateTime @updatedAt
+}
