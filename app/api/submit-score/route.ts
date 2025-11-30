@@ -1,6 +1,7 @@
 /* A POST request with json body with parameters username, score */
 /* Handle Data validations! */
 /* Return mock constant data for now */
+import { scoreProducer } from '@/layers/messaging';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -22,8 +23,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Publish score message to messaging layer
+    await scoreProducer.publishScore({
+      username,
+      points: score,
+    });
+
     return NextResponse.json({
-        message: 'Score submitted successfully',
+      status: 'queued'
     });
   } catch (error) {
     console.error('Error submitting score:', error);

@@ -1,5 +1,6 @@
 /* A GET request to return current leaderboard */
 /* Return mock constant data for now */
+import { leaderboardService } from '@/layers/business';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -14,11 +15,10 @@ export async function GET(req: Request) {
       );
     }
 
-    return NextResponse.json(Array.from({ length: limit }, (_, i) => ({
-      rank: i + 1,
-      username: `user${i + 1}`,
-      score: Math.floor(Math.random() * 1000),
-    })));
+    
+    const topPlayers = await leaderboardService.getTopPlayers(limit);
+    
+    return NextResponse.json(topPlayers);
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return NextResponse.json(
