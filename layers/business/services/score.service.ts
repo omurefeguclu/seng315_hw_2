@@ -15,7 +15,23 @@ export class ScoreService implements IScoreService {
 
   // Score submission validation
   private validateScoreSubmission(submission: ScoreSubmission): void {
-    // TODO: Implement a robust business validation logic for submission entity here
+    // Implement a robust business validation logic for submission entity here
+    if (!submission.username || submission.username.trim().length === 0) {
+      throw new Error('Username is required');
+    }
+
+    if (typeof submission.points !== 'number' || isNaN(submission.points)) {
+      throw new Error('Points must be a valid number');
+    }
+
+    if (submission.points < 0) {
+      throw new Error('Points cannot be negative');
+    }
+
+    // Optional: Add max points validation
+    if (submission.points > 1000000) {
+      throw new Error('Points value too large');
+    }
   }
 
   // Process the score submission
