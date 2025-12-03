@@ -1,9 +1,48 @@
-/* A POST request with json body with parameters username, score */
-/* Handle Data validations! */
-/* Return mock constant data for now */
 import { scoreProducer } from '@/layers/messaging';
 import { NextResponse } from 'next/server';
 
+/**
+ * @swagger
+ * /api/submit-score:
+ *   post:
+ *     tags:
+ *       - Scores
+ *     summary: Submit a player score
+ *     description: Submit a score for a player. The score is queued for processing via Redis Stream
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - score
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Player username
+ *                 example: "player1"
+ *               score:
+ *                 type: number
+ *                 description: Score points to add
+ *                 example: 100
+ *     responses:
+ *       200:
+ *         description: Score successfully queued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "queued"
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Server error
+ */
 export async function POST(req: Request) {
   try {
     const { username, score } = await req.json();
