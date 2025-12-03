@@ -1,52 +1,40 @@
-# Multi-stage build for Worker
+# Production-optimized Dockerfile for Worker
 FROM node:20-alpine AS base
 
-# Install dependencies only when needed
+# Install dependencies stage
 FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Copy package files
+# Copy dependency files
 COPY package.json package-lock.json* ./
-# Need tsx for runtime, so install all dependencies
+
+# Install all dependencies (need tsx for runtime)
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-# Generate Prisma Client (needs dummy DATABASE_URL)
+# Generate Prisma Client
 COPY lib/prisma ./lib/prisma
 COPY prisma.config.ts ./
-ARG DATABASE_URL="postgresql://dummy:dummy@dummy:5432/dummy"
-ENV DATABASE_URL=$DATABASE_URL
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate --schema=./lib/prisma/schema.prisma
 
-# Production image
+# Production runner stage
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 worker
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 worker
 
-# Copy node_modules from deps (includes Prisma client)
-COPY --from=deps /app/node_modules ./node_modules
+# Copy node_modules with all dependencies
+COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
 
-# Copy Prisma schema for migrations
-COPY lib/prisma ./lib/prisma
-
-# Copy application code
+# Copy application source
 COPY --chown=worker:nodejs . .
-
-# Create startup script with migrations
-RUN echo '#!/bin/sh' > /app/start-worker.sh && \
-    echo 'set -e' >> /app/start-worker.sh && \
-    echo 'echo "Running database migrations..."' >> /app/start-worker.sh && \
-    echo 'npx prisma migrate deploy --schema=./lib/prisma/schema.prisma || echo "Migration failed or no migrations to run"' >> /app/start-worker.sh && \
-    echo 'echo "Starting worker..."' >> /app/start-worker.sh && \
-    echo 'exec npx tsx worker.ts' >> /app/start-worker.sh && \
-    chmod +x /app/start-worker.sh && \
-    chown worker:nodejs /app/start-worker.sh
 
 USER worker
 
-# Start the worker with migrations
-CMD ["/app/start-worker.sh"]
+# Start worker
+CMD ["npx", "tsx", "worker.ts"]

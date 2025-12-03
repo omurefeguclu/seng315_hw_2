@@ -63,7 +63,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-omurefe}:${POSTGRES_PASSWORD:-1234}@postgres:5432/${POSTGRES_DB:-game_db}
-      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,7 +82,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-omurefe}:${POSTGRES_PASSWORD:-1234}@postgres:5432/${POSTGRES_DB:-game_db}
-      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       postgres:
         condition: service_healthy
