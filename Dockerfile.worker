@@ -1,0 +1,41 @@
+# Multi-stage build for Worker
+FROM node:20-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat openssl
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
+# Generate Prisma Client
+COPY lib/prisma ./lib/prisma
+COPY prisma.config.ts ./
+RUN npx prisma generate --schema=./lib/prisma/schema.prisma
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 worker
+
+# Copy node_modules from deps
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy Prisma generated client
+COPY --from=deps /app/lib/prisma/generated ./lib/prisma/generated
+COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy application code
+COPY --chown=worker:nodejs . .
+
+USER worker
+
+# Start the worker using tsx
+CMD ["npx", "tsx", "worker.ts"]
