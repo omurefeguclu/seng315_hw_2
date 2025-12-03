@@ -50,10 +50,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy public folder (might not exist for API-only apps)
 COPY --from=builder /app/public ./public || true
 
-# Copy Prisma schema and generated client
+# Copy Prisma schema for migrations
 COPY --from=builder /app/lib/prisma ./lib/prisma
-COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 
 EXPOSE 3000
 

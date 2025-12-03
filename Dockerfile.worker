@@ -27,11 +27,11 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 worker
 
-# Copy node_modules from deps (includes Prisma)
+# Copy node_modules from deps (includes Prisma client)
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy Prisma schema
-COPY --from=deps /app/lib/prisma ./lib/prisma
+# Copy Prisma schema for migrations
+COPY lib/prisma ./lib/prisma
 
 # Copy application code
 COPY --chown=worker:nodejs . .
