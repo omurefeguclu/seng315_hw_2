@@ -1,0 +1,21 @@
+# Railway will use Dockerfile by default
+# This file is a backup configuration
+
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "openssl"]
+
+[phases.build]
+cmds = [
+  "npm ci",
+  "npx prisma generate --schema=./lib/prisma/schema.prisma",
+  "npm run build"
+]
+
+[phases.deploy]
+cmds = [
+  "npx prisma migrate deploy --schema=./lib/prisma/schema.prisma || true",
+  "node .next/standalone/server.js"
+]
+
+[start]
+cmd = "node .next/standalone/server.js"
